@@ -1,0 +1,14 @@
+.tmp/
+__pycache__/
+*.pyc
+*.pyo
+*.ts
+*.log
+firmware.bin
+it930x-firmware.bin
+it9308-firmware.bin
+README-FULL.md
+
+java/out/
+java/.gradle/
+java/build/

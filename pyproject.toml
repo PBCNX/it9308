@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "it9308"
+version = "0.1.0"
+description = "User-space driver for ITE IT930x ISDB-T tuners (048d:9308)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+dependencies = []
+
+[project.scripts]
+it9308 = "it9308.cli:main"
+
+[tool.setuptools]
+packages = ["it9308"]
