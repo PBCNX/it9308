@@ -21,10 +21,10 @@ Android.
 
 | Platform | State |
 |---|---|
-| **Windows** | ✅ measured 2026-10-23, 2026-11-02, 2026-11-03: lock, TS and live S/Q at 599.143 MHz |
-| **Linux** | ✅ measured 2026-11-02/03 on a Raspberry Pi 5 (aarch64): real-antenna scan, 20 s capture, live S/Q |
+| **Windows** | ✅ lock, TS and live S/Q at 599.143 MHz |
+| **Linux** | ✅ real-antenna scan, 20 s capture, live S/Q |
 | **macOS** | 🟡 same libusb path, never executed there |
-| **Android** | ✅ clean-room core and transport verified in OpenDTV-MOD (live 1 Hz S/Q, queued reader, 5-min TV5 soak, 0 bad sync); no Android app/APK is shipped here |
+| **Android** | ✅ core and transport verified in OpenDTV-MOD (live 1 Hz S/Q, queued reader, 5-min TV5 soak, 0 bad sync) |
 
 `✅` measured on hardware; `🟡` code exists but has not been run on that platform.
 
