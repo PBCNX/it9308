@@ -1,10 +1,10 @@
 # it9308 — ITE IT930x + Sony ISDB-T dongle (`048d:9308`)
 
-User-space driver for the ISDB-T dongle sold as **DGI1011** / TVplus Go
-(ITE IT930x bridge, Sony demodulator). It uploads the bridge firmware, replays
+User-space driver for the ISDB-T dongle
+ITE IT930x bridge + Sony demodulator. It uploads the bridge firmware, replays
 the captured 952-step bring-up, tunes a centre frequency and streams MPEG-TS to
 a file, stdout or UDP. libusb on Windows, macOS and Linux; a pure-JVM core for
-Android. No kernel driver, no vendor library.
+Android.
 
 ## Device
 
@@ -28,54 +28,6 @@ Android. No kernel driver, no vendor library.
 
 `✅` measured on hardware; `🟡` code exists but has not been run on that platform.
 
-Measured on Windows (WinUSB/Zadig) with a DTA-115 at 599.143 MHz: **177,043
-packets in 45.0 s, 5.92 Mbps, 0 bad sync bytes**, PAT/PMT with three programs.
-The feed itself was losing packets that day (16,728 continuity discontinuities
-against 6 in an earlier capture) and one resync discarded 79 packets; both are
-recorded in [`docs/verification.md`](docs/verification.md) and are not
-attributed to the stick.
-
-The stick was on USB bus 1 on 2026-10-23. `python -m it9308 list` is the current
-answer, not this paragraph.
-
-Re-plugged on 2026-11-02: the firmware was blank, `probe` re-uploaded
-`1.10.0.0`, all 952 steps replayed, and the demod reports chip ID **`0x6A`**.
-The feed was then freed and retuned to 599.143 (ISDB-T `ABS-PANAY.ts`, a
-7-program mux): 45 s runs of 294,162 packets / 9.83 Mbps and 289,201 packets /
-9.67 Mbps, 0 bad sync; the first had one 80-packet resync, the second none.
-A read-size A/B (16,356 vs 15,040 bytes) made no measurable difference.
-`--freq 473143` also locks on the retuned transmitter: 66,003 packets in 10 s,
-0 bad sync (65,282 at 599.143).
-
-On a Raspberry Pi 5 (aarch64, Python 3.13, pyusb 1.2.1) with an outdoor antenna,
-2026-11-02: a 479–509 MHz scan found **5 of 6 channels** (479 GMA, 485 ALLTV,
-491 IBC, 497 TV5, 509 A2Z), and a 20 s capture on 479.143 gave **110,162
-packets / 0 bad sync / 8.28 Mbps** with 8 programs.
-
-## Install
-
-From a checkout — the supported way, nothing to install. pyusb 1.3.1 is
-vendored under `vendor/usb`. The private checkout also carries a 64-bit
-`libusb-1.0.dll` under `vendor/windows/x64`; if your snapshot does not include
-it, install libusb and point `IT9308_LIBUSB` at it:
-
-```bash
-python -m it9308 list
-```
-
-`python -m it9308 --version` prints `it9308-pbcnx` alongside the version. That
-is a visible provenance marker for attribution/search, not telemetry; it makes
-no network or device calls.
-
-- **Windows**: bind the dongle to WinUSB with [Zadig](https://zadig.akeo.ie/).
-  If the checkout has no DLL, install libusb; `IT9308_LIBUSB` points at it.
-- **Linux**: `sudo cp udev/99-it9308.rules /etc/udev/rules.d/`, reload udev
-  (`sudo udevadm control --reload-rules && sudo udevadm trigger`), replug. The
-  rule grants `uaccess`; no kernel driver is involved. Tested on a Pi 5.
-- **macOS**: install libusb (`brew install libusb`). If pyusb cannot find it,
-  set `IT9308_LIBUSB=/opt/homebrew/lib/libusb-1.0.dylib`. Not yet executed on a
-  Mac.
-
 ## Firmware
 
 6,498 bytes, SHA-256
@@ -85,11 +37,6 @@ no network or device calls.
 The bridge has no flash: a replug clears the firmware and `QUERYINFO` reads
 `0x00000000` until it is uploaded again. `play` and `probe` do that
 automatically.
-
-The image is vendor material and is **not in the public snapshot**: the private
-tree carries it at `firmware.bin` in the checkout root and the release withholds
-it. Supply it with `--firmware PATH` or `IT9308_FIRMWARE`; do not redistribute
-it (see [`NOTICE`](NOTICE)). `list` and the tests do not need it.
 
 ## Run
 
