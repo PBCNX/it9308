@@ -33,8 +33,7 @@ All notable changes to this project are documented here. Format follows
 
 ### Security
 
-- No telemetry, no network calls, no device/user identifiers. The 6,498-byte
-  vendor firmware remains private and is not covered by the MIT licence.
+- No telemetry, no network calls, no device/user identifiers.
 
 ## [0.1.0] - 2026-10-23
 
