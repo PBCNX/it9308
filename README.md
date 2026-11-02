@@ -52,8 +52,10 @@ packets / 0 bad sync / 8.28 Mbps** with 8 programs.
 
 ## Install
 
-From a checkout — the supported way, nothing to install. pyusb 1.3.1 and a
-64-bit `libusb-1.0.dll` are vendored:
+From a checkout — the supported way, nothing to install. pyusb 1.3.1 is
+vendored under `vendor/usb`. The private checkout also carries a 64-bit
+`libusb-1.0.dll` under `vendor/windows/x64`; if your snapshot does not include
+it, install libusb and point `IT9308_LIBUSB` at it:
 
 ```bash
 python -m it9308 list
@@ -64,11 +66,10 @@ is a visible provenance marker for attribution/search, not telemetry; it makes
 no network or device calls.
 
 - **Windows**: bind the dongle to WinUSB with [Zadig](https://zadig.akeo.ie/).
-  `IT9308_LIBUSB` points at a different DLL.
+  If the checkout has no DLL, install libusb; `IT9308_LIBUSB` points at it.
 - **Linux**: `sudo cp udev/99-it9308.rules /etc/udev/rules.d/`, reload udev
   (`sudo udevadm control --reload-rules && sudo udevadm trigger`), replug. The
-  rule grants `uaccess`; no kernel driver is involved. Not yet executed on a
-  Linux host.
+  rule grants `uaccess`; no kernel driver is involved. Tested on a Pi 5.
 - **macOS**: install libusb (`brew install libusb`). If pyusb cannot find it,
   set `IT9308_LIBUSB=/opt/homebrew/lib/libusb-1.0.dylib`. Not yet executed on a
   Mac.
@@ -84,9 +85,9 @@ The bridge has no flash: a replug clears the firmware and `QUERYINFO` reads
 automatically.
 
 The image is vendor material and is **not in the public snapshot**: the private
-tree carries it at `it9308/firmware.bin` and the release withholds it. Supply
-it with `--firmware PATH` or `IT9308_FIRMWARE`; do not redistribute it (see
-[`NOTICE`](NOTICE)). `list` and the tests do not need it.
+tree carries it at `firmware.bin` in the checkout root and the release withholds
+it. Supply it with `--firmware PATH` or `IT9308_FIRMWARE`; do not redistribute
+it (see [`NOTICE`](NOTICE)). `list` and the tests do not need it.
 
 ## Run
 
@@ -147,7 +148,6 @@ of that vendor code belongs here; the app-side `Transport` is now in
 - [`docs/protocol.md`](docs/protocol.md) — command set, frames/checksum,
   firmware records, GPIO map, TS block
 - [`docs/verification.md`](docs/verification.md) — every number and its date
-- [`START-HERE.md`](START-HERE.md) — bench state, commands, traps
 - [`java/README.md`](java/README.md) — the JVM core and its self-test
 
 ## Licence

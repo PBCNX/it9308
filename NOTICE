@@ -1,17 +1,17 @@
 it9308 bundles two things that are not original work:
 
-1. `it9308/firmware.bin` — the IT930x bridge firmware image, extracted from the
+1. `firmware.bin` (checkout root) — the IT930x bridge firmware image, extracted from the
    vendor Android application. It is vendor firmware, not covered by this
    project's MIT licence. It is kept for private interoperability testing only;
    do not redistribute it. The driver cannot start a blank bridge without it;
    `list` and the tests do not need it.
 
-2. `vendor/usb/` (pyusb, BSD-3-Clause) and
+2. `vendor/usb/` (pyusb, BSD-3-Clause) and, in the private checkout,
    `vendor/windows/x64/libusb-1.0.dll` (libusb, LGPL-2.1). Their licences are
    in `vendor/usb/LICENSE` and `vendor/windows/x64/LICENSE`.
 
-`it9308/sequence.py` and `docs/9309-vendor-capture.txt` are protocol captures
-(observed USB traffic), not firmware, and are part of this tree.
+`it9308/sequence.py` is a protocol capture (observed USB traffic), not
+firmware, and is part of this tree.
 
 ## Provenance marker
 

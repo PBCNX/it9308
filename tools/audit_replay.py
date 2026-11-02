@@ -3,7 +3,7 @@
 `device._replay()` writes each frame and reads the reply but never looks at the
 result byte, so a NAK anywhere in the sequence would be invisible.  This walks
 the same frames and reports short replies, bad checksums and non-zero results,
-which is the evidence behind "952/952 commands accepted" in START-HERE.md.
+which is the evidence behind "952/952 commands accepted" in docs/verification.md.
 
     python tools/audit_replay.py
 """

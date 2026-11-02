@@ -106,8 +106,8 @@ javac -source 8 -target 8 -cp "$ANDROID_SDK/platforms/android-34/android.jar" \
     -d out $(find ../src/main/java src/main/java -name '*.java')
 ```
 
-On this bench the JDK is `D:\Profile\Tools\jdk-17` and the SDK is
-`D:\Profile\Tools\android-sdk`; the command is run from `java/android`.
+On this bench the JDK is `%JAVA_HOME%` (or `$JAVA_HOME`) and the SDK is
+`%ANDROID_HOME%`/`$ANDROID_HOME`; the command is run from `java/android`.
 
 ## Licence
 

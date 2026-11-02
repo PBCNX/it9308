@@ -46,8 +46,8 @@ Response:
   bytes after `len`, excluding the checksum itself. It is stored big-endian.
 
 Both halves of that last sentence trip people up. Decoded from the 9309 capture
-(`docs/9309-vendor-capture.txt`; the log's `TX 13` is the total transfer length,
-one more than `len`):
+(the capture is kept in the private tree; the log's `TX 13` is the total transfer
+length, one more than `len`):
 
 ```
 frame  0c 0001 02 01 02 00 00 49 76 00 85 b4
@@ -56,8 +56,8 @@ frame  0c 0001 02 01 02 00 00 49 76 00 85 b4
 words 0001+0201+0200+0049+7600 = 7A4B, ~ = 85B4, bytes 85 B4
 ```
 
-`it9309/docs/9309.md` and `it9309/bridge.py` describe the checksum as
-little-endian; the wire bytes say big-endian. `transport.word_sum()` is correct.
+The separate 9309 driver notes describe the checksum as little-endian; the wire
+bytes say big-endian. `transport.word_sum()` is correct.
 
 ## Commands
 
