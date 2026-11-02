@@ -2,8 +2,7 @@ it9308 bundles two things that are not original work:
 
 1. `firmware.bin` (checkout root) — the IT930x bridge firmware image, extracted from the
    vendor Android application. It is vendor firmware, not covered by this
-   project's MIT licence. It is kept for private interoperability testing only;
-   do not redistribute it. The driver cannot start a blank bridge without it;
+   project's MIT licence. The driver cannot start a blank bridge without it;
    `list` and the tests do not need it.
 
 2. `vendor/usb/` (pyusb, BSD-3-Clause) and, in the private checkout,
