@@ -1,0 +1,2 @@
+# ITE IT9308 ISDB-T dongle
+SUBSYSTEM=="usb", ATTR{idVendor}=="048d", ATTR{idProduct}=="9308", TAG+="uaccess", MODE="0660"

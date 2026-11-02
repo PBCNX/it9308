@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ITE IT930x + Sony ISDB-T, "DGI1011" / TVplus Go -->
+    <usb-device vendor-id="1165" product-id="37640" />
+</resources>
