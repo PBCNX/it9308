@@ -81,17 +81,6 @@ java -cp "out;src/main/resources" ph.pbcnx.it9308.SelfTest
 Use JDK 17+; the checked-in `out` classes are class-file version 61 and a
 Java 8 runtime rejects them.
 
-The repo has **no Android USB transport**. The vendor app (AIRialTV GO
-1.0.6/2.0.4, `com.adth.endeavoursony.Bus`) shows the exact shape: interface 0;
-endpoints by **index** 0 = `0x81` IN, 1 = `0x02` OUT, 2 = `0x84` TS; command
-`bulkTransfer` 500 ms exact-length; TS 15,040 B through ten queued
-`UsbRequest`s (`requestWait(500)` on SDK 26+) or one blocking 15,040-byte read.
-OpenDTV's private vendor-JNI path agrees on the endpoints and batch size. None
-of that vendor code belongs here; the app-side `Transport` is now in
-[`java/android/`](java/android/README.md) — compile-checked against
-`android.jar`, not yet run on a phone. Details and evidence:
-[`docs/vendor-apks-2026-11-02.md`](docs/vendor-apks-2026-11-02.md).
-
 ## More
 
 - [`docs/protocol.md`](docs/protocol.md) — command set, frames/checksum,
