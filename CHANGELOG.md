@@ -38,5 +38,5 @@ All notable changes to this project are documented here. Format follows
 
 ## [0.1.0] - 2026-10-23
 
-- Initial public release: firmware upload, 952-step bring-up, tune, TS capture,
+- Initial public release: 952-step bring-up, tune, TS capture,
   Python CLI, JVM core.
