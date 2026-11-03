@@ -3,6 +3,18 @@
 All notable changes to this project are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versions follow SemVer.
 
+## [0.2.1] - 2026-11-03
+
+### Added
+
+- `play --status-interval N`: one stderr line every N seconds with
+  `ts packets … lock … strength … quality …`, matching the 9175 player format.
+- `scan --start --stop --step`: one process, initialise once, replay per
+  channel; it9175-style lines (`dbm` is `-1000`, not available on 9308).
+- `INSTALL.md`: one install guide for Windows, Linux, macOS and Android.
+- macOS **Intel x86_64** verified: `probe 497143` lock 21.34 dB, RF 53;
+  20 s play 62,803 packets, 0 bad sync, 0 framing loss. Apple Silicon untested.
+
 ## [0.2.0] - 2026-11-03
 
 ### Added

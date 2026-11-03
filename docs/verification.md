@@ -54,6 +54,19 @@ Tune by patching the two 24-bit kHz fields and resealing checksums:
 - 1 Hz poll for 12 s while reading TS: 12/12 locked, SNR 21.3-21.8 dB,
   **48,239 packets, 0 bad sync**.
 
+## macOS — 2026-11-03
+
+Intel MacBook Pro (x86_64), Python 3.13.2, libusb 1.0.30:
+
+- `probe 497143`: firmware `0x010a0000`, 952 steps, chip `0x6a`,
+  `lock True`, SNR 21.34 dB, RF 53, TS 105,280 B.
+- 20 s `play`: **62,803 packets, 0 bad sync, 0 framing loss**; 5 PAT
+  programs; 2 CC errors (one each on two PIDs).
+- BMLplayer scan 473143–509143 (7 channels) in **56.6 s (~8 s/channel)**;
+  it9175-style lines parse unchanged. 503143 reported LOCK/quality 35 but
+  carried no services; the player filters it.
+- Apple Silicon is not tested.
+
 ## Linux / Raspberry Pi 5 — 2026-11-02/03
 
 Pi 5, aarch64, Python 3.13, pyusb 1.2.1; udev rule installed; 12/12 tests pass.
@@ -106,7 +119,7 @@ this repo. Vendor APK details: `docs/vendor-apks-2026-11-02.md`.
 
 ## Not verified
 
-- macOS runtime (same libusb path; never executed).
+- macOS Apple Silicon (Intel x86_64 measured 2026-11-03).
 - Long-run stability (no hours-long run, no USB-drop stress).
 - Absolute RF/dBm (S is a relative 9175-style clamp).
 - BER/PER (not decoded; no PER register).

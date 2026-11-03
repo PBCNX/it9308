@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "it9308"
-version = "0.2.0"
+version = "0.2.1"
 description = "User-space driver for ITE IT930x ISDB-T tuners (048d:9308)"
 authors = [{ name = "The IT9308 Open Driver Authors" }]
 readme = "README.md"

@@ -23,7 +23,7 @@ Android.
 |---|---|
 | **Windows** | ✅ lock, TS and live S/Q at 599.143 MHz |
 | **Linux** | ✅ real-antenna scan, 20 s capture, live S/Q |
-| **macOS** | 🟡 same libusb path, never executed there |
+| **macOS** | ✅ Intel x86_64 measured 2026-11-03 (21.34 dB, 0 bad sync); Apple Silicon untested |
 | **Android** | ✅ core and transport verified in OpenDTV-MOD (live 1 Hz S/Q, queued reader, 5-min TV5 soak, 0 bad sync) |
 
 `✅` measured on hardware; `🟡` code exists but has not been run on that platform.

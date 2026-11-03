@@ -94,16 +94,61 @@ def cmd_play(args):
         tuner = It9308Device(device, print)
         tuner.start(args.firmware, args.freq)
         started = time.time()
+        last_status = time.time()
         packets = 0
         while not args.seconds or time.time() - started < args.seconds:
             data = tuner.read_ts()
             if data:
                 sink.write(data)
                 packets += len(data) // 188
+            if args.status_interval and time.time() - last_status >= args.status_interval:
+                last_status = time.time()
+                status = tuner.status()
+                if status.quality >= 0:
+                    quality = status.quality
+                elif status.snr_db == status.snr_db:  # not NaN
+                    quality = max(0, min(100, int(round(status.snr_db / 30.0 * 100.0))))
+                else:
+                    quality = -1
+                print("ts packets %d  lock %s  strength %s  quality %s" % (
+                    packets, status.locked, status.strength, quality),
+                    file=sys.stderr)
         print("wrote %d packets" % packets, file=sys.stderr)
         return 0
     finally:
         sink.close()
+        device.close()
+
+
+def _quality(status):
+    if status.quality >= 0:
+        return status.quality
+    if status.snr_db == status.snr_db:  # not NaN
+        return max(0, min(100, int(round(status.snr_db / 30.0 * 100.0))))
+    return -1
+
+
+def cmd_scan(args):
+    if args.step <= 0 or args.stop < args.start:
+        print("invalid scan range", file=sys.stderr)
+        return 2
+    device = open_device(args.index)
+    try:
+        tuner = It9308Device(device, lambda message: print(message, file=sys.stderr))
+        frequencies = list(range(args.start, args.stop + 1, args.step))
+        tuner.start(args.firmware, frequencies[0])
+        for frequency in frequencies:
+            if frequency != frequencies[0]:
+                tuner.start(None, frequency)
+            started = time.time()
+            while time.time() - started < args.dwell:
+                tuner.read_ts()
+            status = tuner.status()
+            print("%7d kHz  %-7s strength %3d  quality %3d  dbm %4d" % (
+                frequency, "LOCK" if status.locked else "no lock",
+                status.strength, _quality(status), -1000), flush=True)
+        return 0
+    finally:
         device.close()
 
 
@@ -115,6 +160,15 @@ def main(argv=None):
 
     p = sub.add_parser("list", help="list 048d devices")
     p.set_defaults(func=cmd_list)
+
+    p = sub.add_parser("scan", help="scan a frequency range in one process")
+    p.add_argument("--index", type=int, default=0)
+    p.add_argument("--firmware", metavar="PATH")
+    p.add_argument("--start", type=int, default=473143, metavar="KHZ")
+    p.add_argument("--stop", type=int, default=695143, metavar="KHZ")
+    p.add_argument("--step", type=int, default=6000, metavar="KHZ")
+    p.add_argument("--dwell", type=float, default=2.0, metavar="SECONDS")
+    p.set_defaults(func=cmd_scan)
 
     for name, func, text in (("probe", cmd_probe, "bring up and read TS"),
                              ("play", cmd_play, "stream MPEG-TS")):
@@ -128,6 +182,8 @@ def main(argv=None):
             p.add_argument("--out", default="-", help="file, - for stdout")
             p.add_argument("--udp", help="HOST:PORT")
             p.add_argument("--seconds", type=float, default=0)
+            p.add_argument("--status-interval", type=float, default=5.0,
+                           help="print live lock/strength/quality every N seconds (0 to disable)")
 
     args = parser.parse_args(argv)
     return args.func(args)
