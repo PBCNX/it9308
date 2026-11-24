@@ -1,6 +1,6 @@
 """USB transport for ITE IT930x bridges.
 
-Written from the protocol notes in docs/protocol.md: a length-prefixed command
+Written from our protocol notes: a length-prefixed command
 frame with a big-endian-word checksum, a mirrored response, and a 188-byte
 transport-stream endpoint.
 """
@@ -54,7 +54,17 @@ def backend():
         return libusb1.get_backend(find_library=lambda name: chosen)
     if os.name == "nt" and os.path.exists(bundled):
         return libusb1.get_backend(find_library=lambda name: bundled)
-    return libusb1.get_backend()
+    handle = libusb1.get_backend()
+    if handle is None and sys.platform == "darwin":
+        # pyusb's default macOS lookup does not search Homebrew prefixes.
+        for candidate in ("/opt/homebrew/lib/libusb-1.0.dylib",
+                          "/usr/local/lib/libusb-1.0.dylib"):
+            if os.path.exists(candidate):
+                handle = libusb1.get_backend(
+                    find_library=lambda name, path=candidate: path)
+                if handle is not None:
+                    break
+    return handle
 
 
 def devices():
@@ -63,7 +73,7 @@ def devices():
 
     handle = backend()
     if handle is None:
-        raise TransportError("libusb backend unavailable")
+        raise TransportError("libusb backend unavailable: install libusb-1.0 (Windows: libusb.info, then set IT9308_LIBUSB; macOS: brew install libusb; Linux: libusb-1.0-0)")
     return list(usb.core.find(find_all=True, idVendor=VID, backend=handle))
 
 
@@ -105,29 +115,129 @@ class Device:
             _pyusb().release_interface(self.usb, 0)
         except Exception:
             pass
+        # dispose the libusb device too: releasing the interface alone leaves the handle alive, and a
+        # process that re-execs itself (or a close/reopen in the same process) then finds the interface
+        # still claimed (Pi, 2026-11-20)
+        try:
+            _pyusb().dispose_resources(self.usb)
+        except Exception:
+            pass
+
+    def reboot_blind(self):
+        """Send ``IT9300_reboot`` and do **not** read the answer.
+
+        On a wedged bridge the reboot stalls the command endpoint, so the reply never arrives cleanly; the
+        driver should close the handle immediately and verify on a fresh one. Fire-and-forget is the
+        reliable half of the vendor's reboot.
+        """
+        body = bytes([(CMD_BOOT >> 8) & 0xFF, CMD_BOOT & 0xFF, self.sequence & 0xFF])
+        self.sequence = (self.sequence + 1) & 0xFF
+        packet = bytes([len(body) + 2]) + body
+        packet += struct.pack(">H", word_sum(packet[1:]))
+        self.usb.write(EP_COMMAND_OUT, packet, self.timeout)
+
+    def clear_halts(self):
+        """Clear a stall on every endpoint. After the bridge reboots, the command endpoint can answer
+        ``Pipe error`` until its halt is cleared - this is the recovery for that, and it is safe to call
+        at any time."""
+        cleared = 0
+        try:
+            for configuration in self.usb:
+                for interface in configuration:
+                    for endpoint in interface:
+                        try:
+                            self.usb.clear_halt(endpoint.bEndpointAddress)
+                            cleared += 1
+                        except Exception:
+                            pass
+        except Exception:
+            pass
+        return cleared
+
+    def reset(self):
+        """Reset the USB device and clear endpoint halts.
+
+        This is a **bus** reset: the bridge's firmware RAM survives it, so it is not a substitute for
+        unplugging. It is still worth doing before a forced firmware reload, because it also clears a
+        halted bulk endpoint.
+        """
+        reset = getattr(self.usb, "reset", None)
+        if callable(reset):
+            try:
+                reset()
+            except Exception as error:
+                self.log("usb reset failed: %s" % error)
+        # after a bus reset the configuration is gone: re-set it and re-claim the interface before any
+        # command, or the next exchange answers with a checksum mismatch
+        try:
+            self.usb.set_configuration()
+        except Exception:
+            pass
+        try:
+            _pyusb().claim_interface(self.usb, 0)
+        except Exception:
+            pass
+        try:
+            for endpoint in self.usb:
+                try:
+                    self.usb.clear_halt(endpoint)
+                except Exception:
+                    pass
+        except Exception:
+            pass
 
     # -- framed commands ---------------------------------------------------
-    def exchange(self, command, body=b"", reply=0):
-        packet = bytes([(command >> 8) & 0xFF, command & 0xFF,
-                        self.sequence & 0xFF]) + body
-        self.sequence = (self.sequence + 1) & 0xFF
-        packet = bytes([len(packet) + 2]) + packet
-        packet += struct.pack(">H", word_sum(packet[1:]))
+    def exchange(self, command, body=b"", reply=0, attempts=3):
+        """Send a framed command and return its payload.
 
-        try:
-            self.usb.write(EP_COMMAND_OUT, packet, self.timeout)
-            answer = bytes(self.usb.read(EP_COMMAND_IN, 256, self.timeout))
-        except Exception as exc:
-            raise TransportError(str(exc))
+        A queued reply from an earlier command has a valid checksum too, so a stale frame is only visible
+        through its length and sequence number (the host's 0xC9 case, 2026-11-21). Do **not** hard-fail on the
+        seq: measured on 2026-11-21, gating on it made a working session read nothing at all. Instead, retry
+        the exchange - the bridge answers each request, so a drain-and-retry turns a stale frame into a slow
+        read rather than a wrong value or a dead session.
+        """
+        last = None
+        for _attempt in range(max(1, attempts)):
+            sent = self.sequence & 0xFF
+            packet = bytes([(command >> 8) & 0xFF, command & 0xFF, sent]) + body
+            self.sequence = (self.sequence + 1) & 0xFF
+            packet = bytes([len(packet) + 2]) + packet
+            packet += struct.pack(">H", word_sum(packet[1:]))
 
-        if len(answer) < 5:
-            raise TransportError("short response")
-        if word_sum(answer[1:-2]) != struct.unpack(">H", answer[-2:])[0]:
-            raise TransportError("checksum mismatch")
-        if answer[2]:
-            raise TransportError("command 0x%02x failed: %d" % (command, answer[2]))
-        payload = answer[3:-2]
-        return payload if not reply else payload[:reply]
+            try:
+                self.usb.write(EP_COMMAND_OUT, packet, self.timeout)
+                answer = bytes(self.usb.read(EP_COMMAND_IN, 256, self.timeout))
+            except Exception as exc:
+                raise TransportError(str(exc))
+
+            if len(answer) < 5:
+                last = TransportError("short response")
+                continue
+            if word_sum(answer[1:-2]) != struct.unpack(">H", answer[-2:])[0]:
+                last = TransportError("checksum mismatch")
+                continue
+            if answer[2]:
+                raise TransportError("command 0x%02x failed: %d" % (command, answer[2]))
+            payload = answer[3:-2]
+            if reply and len(payload) != reply:
+                # len=04 means "no payload": byte 3 is the first CRC byte, never data
+                last = TransportError("short reply: %d bytes, expected %d" % (len(payload), reply))
+                continue
+            if answer[1] != sent:
+                last = TransportError("stale response: seq 0x%02x, expected 0x%02x" % (answer[1], sent))
+                continue
+            return payload if not reply else payload[:reply]
+        raise last if last is not None else TransportError("no response")
+
+    def reboot(self):
+        """The vendor SDK's ``IT9300_reboot``: boot command, then the version the bridge comes back with.
+
+        A zero version means the chip came back blank (boot ROM), so a firmware upload is required; a
+        non-zero version means the existing image restarted, which is the cheaper recovery.
+        """
+        self.exchange(CMD_BOOT)
+        time.sleep(0.3)
+        return self.firmware_version()
 
     def firmware_version(self):
         return int.from_bytes(self.exchange(CMD_INFO, b"\x01", 4), "big")

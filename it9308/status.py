@@ -8,8 +8,9 @@ The live registers are on the 0x64 address, read plainly (no bank write):
 - RF: reg 0x11 high / 0x12 low, relative index
   ``((b1 >> 5) | (b0 << 3))`` (GMA 66, empty 7); not calibrated dBm.
 
-Read once between tune() and setStreaming(); a read while TS flows stops the
-stream on this part.
+A read once per second while TS flows is safe on this stick (measured
+2026-11-03: 12/12 locked, 48,239 packets, 0 bad sync). The older note that a
+read while streaming stops the TS came from the wrong page/bank read.
 """
 import math
 from dataclasses import dataclass

@@ -1,21 +1,21 @@
-it9308 bundles two things that are not original work:
+it9308 bundles one thing that is not original work:
 
-1. `firmware.bin` (checkout root) — the IT930x bridge firmware image, extracted from the
-   vendor Android application. It is vendor firmware, not covered by this
-   project's MIT licence. The driver cannot start a blank bridge without it;
-   `list` and the tests do not need it.
+1. `vendor/usb/` - pyusb, BSD-3-Clause. Its licence is `vendor/usb/LICENSE`.
 
-2. `vendor/usb/` (pyusb, BSD-3-Clause) and, in the private checkout,
-   `vendor/windows/x64/libusb-1.0.dll` (libusb, LGPL-2.1). Their licences are
-   in `vendor/usb/LICENSE` and `vendor/windows/x64/LICENSE`.
+The bridge firmware image is **not** part of this repository: it is vendor material and is not
+redistributed. The driver asks for it at run time (`--firmware`, `IT9308_FIRMWARE`, or a file beside
+the package); `list` and `probe` do not need it.
 
-`it9308/sequence.py` is a protocol capture (observed USB traffic), not
-firmware, and is part of this tree.
+`it9308/sequence.py` and `java/src/main/resources/it9308/sequence.bin` are the same protocol capture
+(observed USB traffic), not firmware, and are part of this tree.
 
 ## Provenance marker
 
-`it9308-pbcnx` is a visible provenance/attribution string in the Python and Java
-metadata (`--version`, `It9308Device.PROVENANCE`). It is intended to make the
-origin searchable and to encourage the MIT notice to travel with copies. It is
-**not** telemetry: it performs no network or device I/O, carries no user or
-device identifier, and changes no protocol bytes.
+`it9308-pbcnx` is a visible provenance/attribution string in the Python and Java metadata (`--version`,
+`It9308Device.PROVENANCE`). It is intended to make the origin searchable and to encourage the MIT notice to
+travel with copies. It is **not** telemetry: it performs no network or device I/O, carries no user or device
+identifier, and changes no protocol bytes.
+
+---
+
+Our own code, no vendor code. MIT. Copyright (c) 2026 The IT9308 Open Driver Authors.

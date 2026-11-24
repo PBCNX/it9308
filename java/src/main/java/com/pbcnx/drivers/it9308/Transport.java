@@ -1,0 +1,8 @@
+package com.pbcnx.drivers.it9308;
+
+/** Byte transport implemented by the host (Android UsbDeviceConnection, tests, ...). */
+public interface Transport {
+    void write(byte[] data, int timeoutMs);
+
+    byte[] read(int maxLength, int timeoutMs);
+}
